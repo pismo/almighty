@@ -1,6 +1,6 @@
 {
   "name": "@pismo/almighty",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Tool used to standardize some common tasks in frontend projects",
   "main": "bin/index.js",
   "scripts": {
