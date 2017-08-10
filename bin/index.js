@@ -8,7 +8,7 @@ const rollbar = require('../tasks/rollbar');
 const log = console.log.bind(console);
 
 program
-    .version('1.0.0');
+    .version('0.0.2');
 
 program
   .command('release <version>')

@@ -50,128 +50,128 @@ module.exports = function deploy(dist = 'dist') {
     }
 
     log(chalk.cyan(`Transforming ${bucket} into a website`));
-      return s3.putBucketWebsite({
-        Bucket: bucket,
-        WebsiteConfiguration: {
-          IndexDocument: {
-            Suffix: 'index.html'
-          },
-          ErrorDocument: {
-            Key: '404.html'
-          }
+    return s3.putBucketWebsite({
+      Bucket: bucket,
+      WebsiteConfiguration: {
+        IndexDocument: {
+          Suffix: 'index.html'
+        },
+        ErrorDocument: {
+          Key: '404.html'
         }
-      }, (err) => {
+      }
+    }, (err) => {
+      if (err) {
+        throw error;
+      }
+
+      readDir(distPath)
+        .then(bucketDone)
+        .catch(exit);
+    });
+  }
+
+  function uploadToS3(params) {
+    return new Promise((resolve, reject) => {
+      s3.upload(params, (err, data) => {
         if (err) {
-          throw error;
+          reject(err);
         }
 
-        readDir(distPath)
-          .then(bucketDone)
-          .catch(exit);
+        resolve(data);
       });
-    }
+    });
+  }
 
-    function uploadToS3(params) {
-      return new Promise((resolve, reject) => {
-        s3.upload(params, (err, data) => {
-          if (err) {
-            reject(err);
-          }
+  function doUpload(currentPath) {
+    return new Promise((resolve, reject) => {
+      const key = currentPath.replace(`${distPath}/`, '');
+      const currentYear = (new Date()).getFullYear();
+      const params = {
+        Bucket: bucket,
+        Key: key,
+        RequestPayer: 'requester',
+        ACL: 'public-read',
+        CacheControl: 'public, max-age=3200000000000',
+        Expires: new Date(currentYear + 1, 10, 2)
+      };
 
-          resolve(data);
-        });
-      });
-    }
+      if (path.extname(currentPath) === '') {
+        return resolve();
+      }
 
-    function doUpload(currentPath) {
-      return new Promise((resolve, reject) => {
-        const key = currentPath.replace(`${distPath}/`, '');
-        const currentYear = (new Date()).getFullYear();
-        const params = {
-          Bucket: bucket,
-          Key: key,
-          RequestPayer: 'requester',
-          ACL: 'public-read',
-          CacheControl: 'public, max-age=3200000000000',
-          Expires: new Date(currentYear + 1, 10, 2)
-        };
-
-        if (path.extname(currentPath) === '') {
-          return resolve();
+      return fs.readFile(currentPath, (err, data) => {
+        if (err) {
+          return reject(err);
         }
 
-        return fs.readFile(currentPath, (err, data) => {
-          if (err) {
-            return reject(err);
+        const extname = path.extname(currentPath);
+
+        params.Body = data;
+
+        if (currentPath.match(/(\.html|\.json)/g)) {
+          params.CacheControl = 'no-cache';
+          delete params.Expires;
+        }
+
+        if (extname === '.gz') {
+          const file = currentPath.replace('.gz', '');
+
+          params.ContentEncoding = 'gzip';
+          params.ContentType = mime.contentType(path.extname(file));
+        } else {
+          params.ContentType = mime.contentType(extname);
+
+          if (!params.ContentType) {
+            throw Error(`Missing content type for ${currentPath}`);
           }
+        }
 
-          const extname = path.extname(currentPath);
-
-          params.Body = data;
-
-          if (currentPath.match(/(\.html|\.json)/g)) {
-            params.CacheControl = 'no-cache';
-            delete params.Expires;
-          }
-
-          if (extname === '.gz') {
-            const file = currentPath.replace('.gz', '');
-
-            params.ContentEncoding = 'gzip';
-            params.ContentType = mime.contentType(path.extname(file));
-          } else {
-            params.ContentType = mime.contentType(extname);
-
-            if (!params.ContentType) {
-              throw Error(`Missing content type for ${currentPath}`);
-            }
-          }
-
-          return resolve(uploadToS3(params));
-        });
+        return resolve(uploadToS3(params));
       });
-    }
+    });
+  }
 
-    function processFile(file) {
-      return new Promise((resolve, reject) => {
-        fs.stat(file, (err, stat) => {
-          if (err) {
-            return reject(err);
-          }
+  function processFile(file) {
+    return new Promise((resolve, reject) => {
+      fs.stat(file, (err, stat) => {
+        if (err) {
+          return reject(err);
+        }
 
-          let result;
+        let result;
 
-          if (stat.isFile()) {
-            result = doUpload(file);
-          } else if (stat.isDirectory()) {
-            result = readDir(file);
-          }
+        if (stat.isFile()) {
+          result = doUpload(file);
+        } else if (stat.isDirectory()) {
+          result = readDir(file);
+        }
 
-          return resolve(result);
-        });
+        return resolve(result);
       });
-    }
+    });
+  }
 
-    function readDir(base) {
-      return new Promise((resolve, reject) => {
-        fs.readdir(base, (err, files) => {
-          if (err) {
-            reject(err);
-          }
+  function readDir(base) {
+    return new Promise((resolve, reject) => {
+      fs.readdir(base, (err, files) => {
+        if (err) {
+          reject(err);
+        }
 
-          return Promise
-                   .all(files.map((file) => processFile(path.join(base, file))))
-                   .then(resolve);
-        });
+        return Promise
+                  .all(files.map((file) => processFile(path.join(base, file))))
+                  .then(resolve);
       });
-    }
+    });
+  }
 
-    function exit(err) {
-      log(chalk.red('Something went wrong'), err);
-      process.exit(1);
-    }
+  function exit(err) {
+    log(chalk.red('Something went wrong'), err);
+    process.exit(1);
+  }
 
-    function bucketDone() {
-      log(chalk.green(`Url to test: http://${bucket}.s3-website-${region}.amazonaws.com`));
-    }
+  function bucketDone() {
+    log(chalk.green(`Url to test: http://${bucket}.s3-website-${region}.amazonaws.com`));
+  }
 };
