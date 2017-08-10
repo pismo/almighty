@@ -4,7 +4,7 @@ Tool used to standardize some common tasks in frontend projects
 
 ## Installation
 
-  `npm install @pismo/almighty`
+  `npm install --save-dev @pismo/almighty`
 
 ## Tasks
 
