@@ -3,13 +3,12 @@
   "version": "0.0.1",
   "description": "Tool used to standardize some common tasks in frontend projects",
   "main": "bin/index.js",
-  "private": true,
   "scripts": {
     "lint": "eslint tasks/** --fix",
     "release": "node bin/index.js release"
   },
   "bin": "./bin/index.js",
-  "author": "",
+  "author": "Pismo Developers <dev@pismolabs.io> (https://www.pismo.io)",
   "license": "MIT",
   "dependencies": {
     "aws-sdk": "2.3.x",
