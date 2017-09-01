@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+const pkg = require('../package.json');
 const program = require('commander');
 const chalk = require('chalk');
 const release = require('../tasks/release');
@@ -8,7 +9,7 @@ const rollbar = require('../tasks/rollbar');
 const log = console.log.bind(console);
 
 program
-    .version('0.0.4');
+    .version(pkg.version);
 
 program
   .command('release <version>')

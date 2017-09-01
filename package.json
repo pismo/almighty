@@ -7,7 +7,6 @@
     "lint": "eslint tasks/** --fix",
     "release": "node bin/index.js release"
   },
-  "bin": "./bin/index.js",
   "author": "Pismo Developers <dev@pismolabs.io> (https://www.pismo.io)",
   "license": "MIT",
   "dependencies": {
