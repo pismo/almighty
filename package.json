@@ -2,7 +2,8 @@
   "name": "@pismo/almighty",
   "version": "0.0.5",
   "description": "Tool used to standardize some common tasks in frontend projects",
-  "main": "bin/index.js",
+  "main": "./bin/index.js",
+  "bin": "./bin/index.js",
   "scripts": {
     "lint": "eslint tasks/** --fix",
     "release": "node bin/index.js release"
