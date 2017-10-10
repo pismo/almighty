@@ -11,8 +11,6 @@ const project = require(path.join(process.cwd(), 'package.json')).name;
 // AWS
 const branch = process.env.GIT_BRANCH;
 const region = process.env.AWS_REGION;
-const accessKeyId = process.env.AWS_KEY;
-const secretAccessKey = process.env.AWS_SECRET;
 
 const bucket = (process.env.AWS_BUCKET || `${project}-${branch}` || '')
   .replace(/\/|_/g, '-')
@@ -22,8 +20,6 @@ module.exports = function deploy(dist = 'dist') {
   const distPath = dist;
 
   const s3 = new AWS.S3({
-    accessKeyId,
-    secretAccessKey,
     region
   });
 
