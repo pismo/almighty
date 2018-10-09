@@ -29,7 +29,7 @@ module.exports = function release(mode, push) {
 
   if (push) {
     run('git', ['push', 'origin', 'master:master']);
-    run('git', ['push', '--tags']);
+    run('git', ['push', `v${version}`]);
   }
 
   log(chalk.green(`Version ${version} generated with success!`));
