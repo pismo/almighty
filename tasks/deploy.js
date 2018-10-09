@@ -5,8 +5,9 @@ const mime = require('mime-types');
 const chalk = require('chalk');
 
 const log = console.log.bind(console);
-
-const project = require(path.join(process.cwd(), 'package.json')).name;
+const pkg = require(path.join(process.cwd(), 'package.json'));
+const project = pkg.name;
+const publicDomain = pkg.publicDomain;
 
 // AWS
 const branch = process.env.GIT_BRANCH;
@@ -17,6 +18,8 @@ const secretAccessKey = process.env.AWS_SECRET;
 const bucket = (process.env.AWS_BUCKET || `${project}-${branch}` || '')
   .replace(/\/|_/g, '-')
   .toLowerCase();
+
+const bucketHostname = publicDomain || `${bucket}.s3-website-sa-east-1.amazonaws.com`;
 
 module.exports = function deploy(dist = 'dist') {
   const distPath = dist;
@@ -50,6 +53,7 @@ module.exports = function deploy(dist = 'dist') {
     }
 
     log(chalk.cyan(`Transforming ${bucket} into a website`));
+
     return s3.putBucketWebsite({
       Bucket: bucket,
       WebsiteConfiguration: {
@@ -57,8 +61,19 @@ module.exports = function deploy(dist = 'dist') {
           Suffix: 'index.html'
         },
         ErrorDocument: {
-          Key: '404.html'
-        }
+          Key: 'index.html'
+        },
+        RoutingRules: [
+          {
+            Redirect: {
+              Hostname: bucketHostname,
+              ReplaceKeyPrefixWith: '#/'
+            },
+            Condition: {
+              HttpErrorCodeReturnedEquals: '404'
+            }
+          }
+        ]
       }
     }, (err) => {
       if (err) {
