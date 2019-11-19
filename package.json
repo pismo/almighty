@@ -27,7 +27,7 @@
   "homepage": "https://github.com/pismo/almighty#readme",
   "devDependencies": {
     "eslint": "^2.x.x",
-    "@pismo/eslint-config-pismo": "^1.0.1"
+    "@pismo/eslint-config-pismo": "^2.0.2"
   },
   "engines": {
     "node": ">=6.2.0",
